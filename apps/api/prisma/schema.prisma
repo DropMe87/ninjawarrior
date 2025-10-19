@@ -1,0 +1,87 @@
+// prisma/schema.prisma
+name ChainName
+chainId String
+tokens Token[]
+battles Battle[]
+}
+
+
+model Token {
+id Int @id @default(autoincrement())
+chain Chain @relation(fields: [chainId], references: [id])
+chainId Int
+symbol String
+address String
+decimals Int
+minLiquidityUsd Decimal @default(50000)
+isActive Boolean @default(true)
+battlesA Battle[] @relation("TeamAToken")
+battlesB Battle[] @relation("TeamBToken")
+stakes Stake[]
+
+
+@@unique([chainId, address])
+}
+
+
+model Battle {
+id String @id @default(uuid())
+chain Chain @relation(fields: [chainId], references: [id])
+chainId Int
+creatorTgid String
+status BattleStatus
+startsAt DateTime?
+endsAt DateTime?
+teamAToken Token @relation("TeamAToken", fields: [teamATokenId], references: [id])
+teamATokenId Int
+teamBToken Token @relation("TeamBToken", fields: [teamBTokenId], references: [id])
+teamBTokenId Int
+teamATotalRaw Decimal @default(0)
+teamBTotalRaw Decimal @default(0)
+snapshot PriceSnapshot?
+winnerSide Int?
+txRef String?
+stakes Stake[]
+payouts Payout[]
+}
+
+
+model PriceSnapshot {
+id String @id @default(uuid())
+battle Battle @relation(fields: [battleId], references: [id])
+battleId String @unique
+takenAt DateTime
+teamAPriceUsd Decimal
+teamBPriceUsd Decimal
+source String
+}
+
+
+model Stake {
+id String @id @default(uuid())
+battle Battle @relation(fields: [battleId], references: [id])
+battleId String
+side Int
+wallet String
+token Token @relation(fields: [tokenId], references: [id])
+tokenId Int
+amountRaw Decimal
+txHash String?
+createdAt DateTime @default(now())
+}
+
+
+model Payout {
+id String @id @default(uuid())
+battle Battle @relation(fields: [battleId], references: [id])
+battleId String
+winnerWallet String
+winnerToken Token @relation(fields: [winnerTokenId], references: [id])
+winnerTokenId Int
+grossAmountRaw Decimal
+feeRaw Decimal
+netAmountRaw Decimal
+swapTxHash String?
+payoutTxHash String?
+createdAt DateTime @default(now())
+}
